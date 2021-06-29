@@ -1,33 +1,66 @@
-const { readdirSync, rmdirSync } = require('fs')
-const { join } = require('path');
-const { promisify } = require('util');
-const {execFileSync} = require('child_process')
+const { readdirSync, rmdirSync } = require("fs");
+const { join } = require("path");
+const { execFileSync } = require("child_process");
 
-const getDirectories = source =>
-    readdirSync(source, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name)
+const getDirectories = (source) =>
+  readdirSync(source, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 
-const compress = async dirName => {
-    console.log(`Compressing ${dirName}`);
-    const fullDirName = join(home, dirName);
-    const destName = `${fullDirName}.7z`;
-    execFileSync("7z", ["-v4480m", "a", destName, fullDirName]);
-    console.log(`Removing ${dirName}`);
-    rmdirSync(fullDirName, {
-        recursive: true
+const compress = async (
+  compressingRootFolder,
+  folderName,
+  removeOriginalFolder,
+  destinationPath
+) => {
+  console.log(`Compressing ${folderName}`);
+  const folderPath = join(compressingRootFolder, folderName);
+  const destName = `${join(destinationPath, folderName)}.7z`;
+  execFileSync("7z", ["-v4480m", "a", destName, folderPath]);
+  if (removeOriginalFolder) {
+    console.log(`Removing ${folderName}`);
+    rmdirSync(folderPath, {
+      recursive: true,
     });
-}
+  }
+};
 
-const main = async home => {
-    if (home) {
-        for (const dirName of getDirectories(home)) {
-            console.log(`Elaborating ${dirName}`);
-            await compress(dirName);
-        }
+const main = async (
+  compressingRootFolder,
+  removeOriginalFolder,
+  destinationPath
+) => {
+  if (!destinationPath) {
+    destinationPath = compressingRootFolder;
+  }
+  if (compressingRootFolder) {
+    for (const folderName of getDirectories(compressingRootFolder)) {
+      console.log(`Elaborating ${folderName}`);
+      await compress(
+        compressingRootFolder,
+        folderName,
+        removeOriginalFolder,
+        destinationPath
+      );
     }
-}
+  }
+};
 
-const home = process.argv.slice(2)[0];
-console.log(`Launching process on folder ${home}`);
-main(home).finally(_ignore => console.log(`Exit...`));
+const processArguments = process.argv.slice(2);
+var compressingRootFolder = processArguments[0];
+var removeOriginalFolder = false;
+var destinationPath = null;
+console.log(`Launching process on folder ${compressingRootFolder}`);
+if (processArguments.length > 1) {
+  removeOriginalFolder = processArguments[1] === "true";
+  console.log(
+    `Removes packages (${removeOriginalFolder ? "enabled" : "disabled"})`
+  );
+}
+if (processArguments.length > 2) {
+  destinationPath = processArguments[2];
+  console.log(`Archives saved in folder ${destinationPath}`);
+}
+main(compressingRootFolder, removeOriginalFolder, destinationPath).finally(
+  (_ignore) => console.log(`Exit...`)
+);
