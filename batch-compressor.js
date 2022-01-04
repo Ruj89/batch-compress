@@ -28,14 +28,19 @@ const compress = async (
 const main = async (
   compressingRootFolder,
   removeOriginalFolder,
-  destinationPath
+  destinationPath,
+  ignoringFolders
 ) => {
   if (!destinationPath) {
     destinationPath = compressingRootFolder;
   }
   if (compressingRootFolder) {
     for (const folderName of getDirectories(compressingRootFolder)) {
-      console.log(`Elaborating ${folderName}`);
+      if (ignoringFolders.includes(folderName)) {
+        console.log(`Folder "${folderName}" ignored`);
+        continue;
+      }
+      console.log(`Elaborating "${folderName}"`);
       await compress(
         compressingRootFolder,
         folderName,
@@ -50,6 +55,7 @@ const processArguments = process.argv.slice(2);
 var compressingRootFolder = processArguments[0];
 var removeOriginalFolder = false;
 var destinationPath = null;
+var ignoringFolders = [];
 console.log(`Launching process on folder ${compressingRootFolder}`);
 if (processArguments.length > 1) {
   removeOriginalFolder = processArguments[1] === "true";
@@ -61,6 +67,13 @@ if (processArguments.length > 2) {
   destinationPath = processArguments[2];
   console.log(`Archives saved in folder ${destinationPath}`);
 }
-main(compressingRootFolder, removeOriginalFolder, destinationPath).finally(
-  (_ignore) => console.log(`Exit...`)
-);
+if (processArguments.length > 3) {
+  ignoringFolders = processArguments.slice(3);
+  console.log(`Ignoring folders ${ignoringFolders.join(", ")}`);
+}
+main(
+  compressingRootFolder,
+  removeOriginalFolder,
+  destinationPath,
+  ignoringFolders
+).finally((_ignore) => console.log(`Exit...`));

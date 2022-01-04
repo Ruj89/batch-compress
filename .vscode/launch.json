@@ -12,7 +12,8 @@
             "args": [
                 "C:\\Amazon Games\\Library",
                 "false",
-                "D:\\Games Backup"
+                "E:\\Games Backup",
+                "__InstallData__"
             ]
         }
     ]
