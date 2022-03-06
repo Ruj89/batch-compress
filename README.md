@@ -14,5 +14,5 @@ No install instructions.
 ## Usage
 
 ```bash
-node batch-compressor.js <folder_path> [<remove_original_folder> [<destination_path>]]
+node batch-compressor.js <folder_path> [<remove_original_folder> [<destination_path> [<comma_separated_ignored_folders>]]]
 ```

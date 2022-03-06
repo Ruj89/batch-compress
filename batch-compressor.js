@@ -2,17 +2,18 @@ const { readdirSync, rmdirSync } = require("fs");
 const { join } = require("path");
 const { execFileSync } = require("child_process");
 
-const getDirectories = (source) =>
-  readdirSync(source, { withFileTypes: true })
+function getDirectories(source) {
+  return readdirSync(source, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory())
     .map((dirent) => dirent.name);
+}
 
-const compress = async (
+function compress(
   compressingRootFolder,
   folderName,
   removeOriginalFolder,
   destinationPath
-) => {
+) {
   console.log(`Compressing ${folderName}`);
   const folderPath = join(compressingRootFolder, folderName);
   const destName = `${join(destinationPath, folderName)}.7z`;
@@ -23,39 +24,37 @@ const compress = async (
       recursive: true,
     });
   }
-};
+}
 
-const main = async (
+function main(
   compressingRootFolder,
   removeOriginalFolder,
   destinationPath,
   ignoringFolders
-) => {
-  if (!destinationPath) {
-    destinationPath = compressingRootFolder;
-  }
+) {
+  if (!destinationPath) destinationPath = compressingRootFolder;
+
   if (compressingRootFolder) {
     for (const folderName of getDirectories(compressingRootFolder)) {
-      if (ignoringFolders.includes(folderName)) {
-        console.log(`Folder "${folderName}" ignored`);
-        continue;
-      }
-      console.log(`Elaborating "${folderName}"`);
-      await compress(
-        compressingRootFolder,
-        folderName,
-        removeOriginalFolder,
-        destinationPath
-      );
+      if (!ignoringFolders.includes(folderName)) {
+        console.log(`Elaborating "${folderName}"`);
+        compress(
+          compressingRootFolder,
+          folderName,
+          removeOriginalFolder,
+          destinationPath
+        );
+      } else console.log(`Folder "${folderName}" ignored`);
     }
   }
-};
+}
 
 const processArguments = process.argv.slice(2);
-var compressingRootFolder = processArguments[0];
-var removeOriginalFolder = false;
-var destinationPath = null;
-var ignoringFolders = [];
+const compressingRootFolder = processArguments[0];
+let removeOriginalFolder = false;
+let destinationPath = null;
+let ignoringFolders = [];
+
 console.log(`Launching process on folder ${compressingRootFolder}`);
 if (processArguments.length > 1) {
   removeOriginalFolder = processArguments[1] === "true";
@@ -71,9 +70,12 @@ if (processArguments.length > 3) {
   ignoringFolders = processArguments.slice(3);
   console.log(`Ignoring folders ${ignoringFolders.join(", ")}`);
 }
+
 main(
   compressingRootFolder,
   removeOriginalFolder,
   destinationPath,
   ignoringFolders
-).finally((_ignore) => console.log(`Exit...`));
+);
+
+console.log(`Exit...`);
